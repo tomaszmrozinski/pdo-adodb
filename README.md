@@ -1,4 +1,4 @@
 PDO_ADODB class
 =========
 
-Implements ADODB methods with PDO
+Implement ADODB methods with PDO
