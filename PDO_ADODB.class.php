@@ -30,7 +30,7 @@ class PDO_ADODB extends PDO{
 	
 	public function GetRow( $sql ){
 
-		if(stristr( $sql, 'LIMIT 1' ))throw new PDOException( 'You cannot use "LIMIT 1" in sql.' );
+		if( stristr( $sql, 'LIMIT 1' ) )throw new PDOException( 'You cannot use "LIMIT 1" in sql.' );
 	
 		$this->result = $this->prepare( $sql );
 		$this->result->execute();
@@ -75,13 +75,13 @@ class PDO_ADODB extends PDO{
 
 	}
 	
-	public function ErrorMsg() {
+	public function ErrorMsg(){
 
 		return implode( ', ', $this->errorInfo() );
 
 	}
 	
-	public function Insert_ID() {
+	public function Insert_ID(){
 
 		return $this->lastInsertId();
 
