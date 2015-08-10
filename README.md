@@ -1,4 +1,4 @@
-PDO_ADODB class
+PDO_ADODB class - test 
 =========
 
 Implement ADODB methods with PDO
