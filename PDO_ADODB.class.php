@@ -1,90 +1,127 @@
 <?php
 /*
 Description: Implement ADODB methods with PDO
-Version: 0.0.1
+Version: 0.0.2
 Author: Tomasz Mrozinski
 Author URI: mrozinski.net
 */
 
-class PDO_ADODB extends PDO{
-	
-	private $result = null;
-	
-	public function __construct( $dsn, $username, $passwd, $options=null ){
+class PDO_ADODB extends PDO
+{
 
-		parent::__construct( $dsn, $username, $passwd, $options=null );
-		
-		//enable exceptions for PDO by default
-		parent::setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
-		
-	}
-	
-	public function GetAll( $sql ){
+    /**
+     * @var null
+     */
+    private $result = null;
 
-		$this->result = $this->prepare( $sql );
-		$this->result->execute();
+    /**
+     * PDO_ADODB constructor.
+     * @param $dsn
+     * @param $username
+     * @param $passwd
+     * @param null $options
+     */
+    public function __construct($dsn, $username, $passwd, $options = null)
+    {
+        //enable exceptions for PDO by default
+        parent::setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        parent::__construct($dsn, $username, $passwd, $options);
+    }
 
-		return $this->result->fetchAll( PDO::FETCH_ASSOC );
+    /**
+     * @param $sql
+     * @return mixed
+     */
+    public function GetAll($sql)
+    {
+        $this->prepareAndExecute($sql);
+        return $this->result->fetchAll(PDO::FETCH_ASSOC);
+    }
 
-	}
-	
-	public function GetRow( $sql ){
+    /**
+     * @param $sql
+     * @return mixed
+     */
+    public function GetRow($sql)
+    {
+        $this->checkSqlLimit($sql);
+        $this->prepareAndExecute($sql);
+        return $this->result->fetch(PDO::FETCH_ASSOC);
+    }
 
-		if( stristr( $sql, 'LIMIT 1' ) )throw new PDOException( 'You cannot use "LIMIT 1" in sql.' );
-	
-		$this->result = $this->prepare( $sql );
-		$this->result->execute();
+    /**
+     * @param $sql
+     * @return mixed
+     */
+    public function GetOne($sql)
+    {
+        $this->checkSqlLimit($sql);
+        $this->prepareAndExecute($sql . ' LIMIT 1');
+        return $this->result->fetchColumn(0);
+    }
 
-		return $this->result->fetch( PDO::FETCH_ASSOC );
+    /**
+     * @param $sql
+     * @return mixed
+     */
+    public function GetCol($sql)
+    {
+        $this->prepareAndExecute($sql);
+        return $this->result->fetchColumn();
+    }
 
-	}
-	
-	public function GetOne( $sql ){
-		
-		if( stristr( $sql, 'LIMIT 1' ) )throw new PDOException( 'You cannot use "LIMIT 1" in sql.' );
-		
-		$this->result = $this->prepare( $sql . ' LIMIT 1' );
-		$this->result->execute();
+    /**
+     * @param $sql
+     * @return mixed
+     */
+    public function GetAssoc($sql)
+    {
+        $this->prepareAndExecute($sql);
+        return $this->result->fetchAll(PDO::FETCH_COLUMN | PDO::FETCH_GROUP);
+    }
 
-		return $this->result->fetchColumn( 0 );
+    /**
+     * @param $sql
+     * @return bool
+     */
+    public function Execute($sql): bool
+    {
+        $this->result = $this->prepare($sql);
+        return $this->result->execute();
+    }
 
-	}
-	
-	public function GetCol( $sql ){
+    /**
+     * @return string
+     */
+    public function ErrorMsg(): string
+    {
+        return implode(', ', $this->errorInfo());
+    }
 
-		$this->result = $this->prepare( $sql );
-		$this->result->execute();
+    /**
+     * @return string
+     */
+    public function Insert_ID(): string
+    {
+        return $this->lastInsertId();
+    }
 
-		return $this->result->fetchColumn();
+    /**
+     * @param $sql
+     */
+    private function prepareAndExecute($sql): void
+    {
+        $this->result = $this->prepare($sql);
+        $this->result->execute();
+    }
 
-	}
-	
-	public function GetAssoc( $sql ){
-
-		$this->result = $this->prepare( $sql );
-		$this->result->execute();
-
-		return $this->result->fetchAll( PDO::FETCH_COLUMN|PDO::FETCH_GROUP );
-	}
-	
-	public function Execute( $sql ){
-
-		$this->result = $this->prepare( $sql );
-
-		return $this->result->execute();
-
-	}
-	
-	public function ErrorMsg(){
-
-		return implode( ', ', $this->errorInfo() );
-
-	}
-	
-	public function Insert_ID(){
-
-		return $this->lastInsertId();
-
-	}
+    /**
+     * @param $sql
+     */
+    private function checkSqlLimit($sql): void
+    {
+        if (stristr(strtolower($sql), 'limit 1')) {
+            throw new PDOException('You cannot use "LIMIT 1" in sql.');
+        }
+    }
 }
-?>
